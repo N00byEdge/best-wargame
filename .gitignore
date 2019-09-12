@@ -1,0 +1,4 @@
+build*
+drive*
+!drive/make_certs.sh
+.vscode*
