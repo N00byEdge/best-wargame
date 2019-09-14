@@ -1,4 +1,4 @@
 build*
-drive*
-!drive/make_certs.sh
+Wargame/Drive/*
+!Wargame/Drive/make_certs.sh
 .vscode*
