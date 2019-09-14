@@ -11,6 +11,7 @@ if (NOT DEFINED CONAN_DEPENDENCIES)
 endif()
 conan_basic_setup()
 
+include_directories(.)
 
 include(os)
 
