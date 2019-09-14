@@ -5,28 +5,31 @@
 #include <string>
 #include <openssl/sha.h>
 
+#include "Wargame/Util.hpp"
+
 namespace Auth {
   using PasswordSalt = std::array<unsigned char, 0x20>;
   using PasswordHash = std::array<unsigned char, SHA512_DIGEST_LENGTH>;
 
-  namespace Impl {
-    inline static std::random_device rand{};
-  }
-
-  PasswordHash hashPassword(std::string password, PasswordSalt const &salt, int iterations) {
+  PasswordHash hashPassword(std::string_view const &password, PasswordSalt const &salt, int iterations) {
+    SHA512_CTX ctx;
     PasswordHash out;
-    password.insert(password.begin(), salt.begin(), salt.end());
-    SHA512(reinterpret_cast<unsigned char const *>(password.c_str()), password.size(), out.data());
-    for(int i = 0; i < iterations; ++ i) {
+
+    SHA512_Init(&ctx);
+    SHA512_Update(&ctx, salt.data(), salt.size());
+    SHA512_Update(&ctx, password.data(), password.size());
+    SHA512_Final(out.data(), &ctx);
+
+    for(int i = 0; i < iterations; ++ i)
       SHA512(out.data(), out.size(), out.data());
-    }
+
     return out;
   }
 
   PasswordSalt randomizePasswordSalt() {
     PasswordSalt out;
     for(auto &c: out)
-      c = Impl::rand();
+      c = Util::rand();
     return out;
   }
 }

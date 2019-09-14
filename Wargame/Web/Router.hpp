@@ -88,7 +88,8 @@ namespace Networking {
 
   inline static Router router{{"error", // Default route
     [](Networking::Request &, Networking::Response &resp) {
-      HTML::sendError(resp, "Invalid request", http::Not_Found);
+      resp->write_header(http::Not_Found);
+      resp->write(HTML::errorPage("Invalid request"));
     }
   }};
 }

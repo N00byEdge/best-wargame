@@ -3,8 +3,6 @@
 #include <string>
 #include <type_traits>
 
-#include "Wargame/Web/Network.hpp"
-
 namespace HTML {
   namespace Impl {
     template<typename ...Args>
@@ -89,6 +87,8 @@ namespace HTML {
     inline static char const h4[] = "h4";
 
     inline static char const title[] = "title";
+    inline static char const p[] = "p";
+    inline static char const b[] = "b";
 
     template<char const *tag>
     struct ArgTag {
@@ -100,6 +100,10 @@ namespace HTML {
     };
 
     inline static char const a[] = "a";
+    inline static char const form[] = "form";
+    inline static char const div[] = "div";
+    inline static char const button[] = "button";
+    inline static char const label[] = "label";
   }
 
   inline static const Impl::SimpleTag<Impl::h1> h1;
@@ -108,6 +112,8 @@ namespace HTML {
   inline static const Impl::SimpleTag<Impl::h4> h4;
 
   inline static const Impl::SimpleTag<Impl::title> title;
+  inline static const Impl::SimpleTag<Impl::p> p;
+  inline static const Impl::SimpleTag<Impl::b> b;
 
   inline static const Impl::ArgTag<Impl::a> a;
 
@@ -118,13 +124,57 @@ namespace HTML {
       return a(std::move(str), std::move(hrefStr));
     };
 
+  inline static const Impl::ArgTag<Impl::form> form;
+
+  inline static const auto formAction =
+    [](std::string &&str, char const *target) {
+      std::string actionStr;
+      multiAppend(actionStr, "action=\"", target, "\" method=\"post\"");
+      return form(std::move(str), std::move(actionStr));
+    };
+
+  inline static const Impl::ArgTag<Impl::div> div;
+  inline static const Impl::ArgTag<Impl::button> button;
+  inline static const Impl::ArgTag<Impl::label> label;
+
   inline static char const br[] = "<br>";
+  inline static char const hr[] = "<hr>";
 
   std::string doctype = "<!DOCTYPE html>";
 
-  void sendError(Networking::Response &response, std::string errorString, http::status_t status) {
-    response->write_header(status);
+  std::string errorPage(std::string errorString) {
     std::string responseStr = doctype;
-    multiAppend(responseStr, title("Error"), h2(std::move(errorString)));
+    multiAppend(responseStr, title("Error"), h1(std::move(errorString)));
+    return responseStr;
+  }
+
+  std::string labelledInputField(std::string &&nameStr
+                          , std::string &&labelStr
+                          , std::string &&placeholderStr
+                          , std::string &&typeStr
+                          , bool required) {
+    std::string inputStr;
+    if(required) {
+      HTML::multiAppend(inputStr,
+        "<input type=\"", std::move(typeStr),
+        "\" placeholder=\"", std::move(placeholderStr),
+        "\" name=\"", nameStr, "\" required>"
+      );
+    } else {
+      HTML::multiAppend(inputStr,
+        "<input type=\"", std::move(typeStr),
+        "\" placeholder=\"", std::move(placeholderStr),
+        "\" name=\"", nameStr, "\">"
+      );
+    }
+
+    std::string field;
+    HTML::multiAppend(field,
+      label(std::move(labelStr), "for=\"" + std::move(nameStr) + '\"'),
+      br,
+      std::move(inputStr),
+      br
+    );
+    return field;
   }
 }

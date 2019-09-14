@@ -10,7 +10,7 @@ namespace Auth {
       return attemptedHash == passwordHash;
     }
 
-    void setPassword(std::string password, int iterations) {
+    void setPassword(std::string_view const &password, int iterations) {
       passwordHash =
         Auth::hashPassword(password
                          // User always gets a new salt on every password change
@@ -18,8 +18,7 @@ namespace Auth {
                          , hashIterations = iterations
         );
     }
-    
-  private:
+
     PasswordHash passwordHash;
     PasswordSalt salt;
     int hashIterations;
