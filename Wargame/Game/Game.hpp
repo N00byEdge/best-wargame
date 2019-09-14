@@ -12,9 +12,9 @@ namespace Wargame {
       HTML::multiAppend(responseStr,
         HTML::title("Best Wargame"),
         HTML::h1("Homepage"),
-        HTML::a("Register", "href=\"/register\""),
+        HTML::href("Register", "/register"),
         HTML::br,
-        HTML::a("Login", "href=\"/login\"")
+        HTML::href("Login", "/login")
       );
       response->write(responseStr);
     }});
