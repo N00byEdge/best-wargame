@@ -1,4 +1,5 @@
 build*
 Wargame/Drive/*
+Extern*
 !Wargame/Drive/make_certs.sh
 .vscode*
