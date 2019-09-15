@@ -4,4 +4,4 @@ source ./activate.sh && \
 cmake .. && \
 cmake --build . && \
 boot wargame_service --create-bridge && \
-source deacticate.sh
+source ./deacticate.sh

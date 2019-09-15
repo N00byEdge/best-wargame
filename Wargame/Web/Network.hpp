@@ -1,10 +1,9 @@
 #pragma once
 
-#include <http>
-#include <https>
-#include <net/interfaces>
+#include <mana/request.hpp>
+#include <mana/response.hpp>
 
 namespace Networking {
-  using Response = http::Response_writer_ptr;
-  using Request = http::Request_ptr;
+  using Request = mana::Request_ptr;
+  using Response = mana::Response_ptr;
 }

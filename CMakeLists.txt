@@ -11,6 +11,8 @@ if (NOT DEFINED CONAN_DEPENDENCIES)
 endif()
 conan_basic_setup()
 
+include_directories(${CONAN_INCLUDE_DIRS})
+include_directories(Extern/CQL)
 include_directories(.)
 
 include(os)

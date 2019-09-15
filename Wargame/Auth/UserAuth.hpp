@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Wargame/Auth/Session.hpp"
 #include "Wargame/Auth/Passwords.hpp"
 
 namespace Auth {

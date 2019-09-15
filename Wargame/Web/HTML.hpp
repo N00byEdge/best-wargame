@@ -1,83 +1,21 @@
 #pragma once
 
 #include <string>
+#include <sstream>
 #include <type_traits>
+
+#define FMT_HEADER_ONLY
+#include <fmt/ostream.h>
 
 namespace HTML {
   namespace Impl {
-    template<typename ...Args>
-    struct PredictedSize;
-
-    template<typename T>
-    struct remove_cvref {
-        using type = std::remove_cv_t<std::remove_reference_t<T>>;
-    };
-    
-    template<typename T>
-    using remove_cvref_t = typename remove_cvref<T>::type;
-
-    template<>
-    struct PredictedSize <> {
-      std::size_t operator()() const { return 0; }
-    };
-
-    template<typename ...Args>
-    struct PredictedSize <char, Args...> {
-      std::size_t operator()(char const &, Args const &... args) const {
-        return 1 + PredictedSize<Args...>{}(args...);
-      }
-    };
-
-    template<typename ...Args>
-    struct PredictedSize <char const *, Args...> {
-      std::size_t operator()(char const *const &str, Args const &... args) const {
-        return strlen(str) + PredictedSize<Args...>{}(args...);
-      }
-    };
-
-    template<typename ...Args>
-    struct PredictedSize <std::string_view, Args...> {
-      std::size_t operator()(std::string_view const &str, Args const &... args) const {
-        return str.size() + PredictedSize<Args...>{}(args...);
-      }
-    };
-
-    template<typename ...Args>
-    struct PredictedSize <std::string, Args...> {
-      std::size_t operator()(std::string const &str, Args const &... args) const {
-        return str.size() + PredictedSize<Args...>{}(args...);
-      }
-    };
-
-    template<typename ...Args, std::size_t arrSz>
-    struct PredictedSize <char [arrSz], Args...> {
-      std::size_t operator()(char const (&arr)[arrSz], Args const &... args) const {
-        // Check if there is a null terminator in there
-        return arrSz - (arr[arrSz - 1] == '\0') + PredictedSize<Args...>{}(args...);
-      }
-    };
-
-    template<typename CurrArg, typename ...Args>
-    void multiAppend(std::string &str, CurrArg &&arg, Args &&... args) {
-      str += std::forward<CurrArg>(arg);
-      if constexpr(sizeof...(args))
-        Impl::multiAppend(str, std::forward<Args>(args)...);
-    }
-  }
-
-  template<typename ...Args>
-  void multiAppend(std::string &str, Args &&... args) {
-    str.reserve(str.size() + Impl::PredictedSize<Impl::remove_cvref_t<Args>...>{}(args...));
-    Impl::multiAppend(str, std::forward<Args>(args)...);
-  }
-  
-  namespace Impl {
     template<char const *tag>
     struct SimpleTag {
-      std::string operator()(std::string &&str) const {
-        std::string result;
-        multiAppend(result, '<', tag, '>', std::move(str), '<', '/', tag, '>');
-        return result;
+      template<typename F>
+      void operator()(std::stringstream &stream, F &&f) const {
+        fmt::print(stream, "<{}>", tag);
+        f();
+        fmt::print(stream, "</{}>", tag);
       }
     };
 
@@ -92,10 +30,11 @@ namespace HTML {
 
     template<char const *tag>
     struct ArgTag {
-      std::string operator()(std::string &&str, std::string const &arg) const {
-        std::string result;
-        multiAppend(result, '<', tag, ' ', arg, '>', std::move(str), '<', '/', tag, '>');
-        return result;
+      template<typename F>
+      void operator()(std::stringstream &stream, std::string const &arg, F &&f) const {
+        fmt::print(stream, "<{}{}>", tag, arg.empty() ? "" : ' ' + arg);
+        f();
+        fmt::print(stream, "</{}>", tag);
       }
     };
 
@@ -117,21 +56,18 @@ namespace HTML {
 
   inline static const Impl::ArgTag<Impl::a> a;
 
-  inline static const auto href =
-    [](std::string &&str, char const *target) {
-      std::string hrefStr;
-      multiAppend(hrefStr, "href=\"", target, '\"');
-      return a(std::move(str), std::move(hrefStr));
-    };
+  template<typename F>
+  void href(std::stringstream &stream, std::string const &target, F &&f) {
+    a(stream, "href=\"" + target + '\"', std::forward<F>(f));
+  };
 
   inline static const Impl::ArgTag<Impl::form> form;
 
-  inline static const auto formAction =
-    [](std::string &&str, char const *target) {
-      std::string actionStr;
-      multiAppend(actionStr, "action=\"", target, "\" method=\"post\"");
-      return form(std::move(str), std::move(actionStr));
-    };
+  template<typename F>
+  void formAction(std::stringstream &stream, std::string const &target, F &&f) {
+    // @TODO: Move the CSRF token things to over here
+    form(stream, "action=\"" + target + "\" method=\"post\"", std::forward<F>(f));
+  };
 
   inline static const Impl::ArgTag<Impl::div> div;
   inline static const Impl::ArgTag<Impl::button> button;
@@ -142,39 +78,26 @@ namespace HTML {
 
   std::string doctype = "<!DOCTYPE html>";
 
-  std::string errorPage(std::string errorString) {
-    std::string responseStr = doctype;
-    multiAppend(responseStr, title("Error"), h1(std::move(errorString)));
-    return responseStr;
+  void errorPage(std::stringstream &stream, std::string const &errorString) {
+    title(stream, [&](){ stream << "Error"; });
+    h1(stream, [&](){ stream << std::move(errorString); });
   }
 
-  std::string labelledInputField(std::string &&nameStr
-                          , std::string &&labelStr
-                          , std::string &&placeholderStr
-                          , std::string &&typeStr
-                          , bool required) {
-    std::string inputStr;
-    if(required) {
-      HTML::multiAppend(inputStr,
-        "<input type=\"", std::move(typeStr),
-        "\" placeholder=\"", std::move(placeholderStr),
-        "\" name=\"", nameStr, "\" required>"
-      );
-    } else {
-      HTML::multiAppend(inputStr,
-        "<input type=\"", std::move(typeStr),
-        "\" placeholder=\"", std::move(placeholderStr),
-        "\" name=\"", nameStr, "\">"
-      );
-    }
-
-    std::string field;
-    HTML::multiAppend(field,
-      label(std::move(labelStr), "for=\"" + std::move(nameStr) + '\"'),
-      br,
-      std::move(inputStr),
-      br
+  void labelledInputField(std::stringstream &stream
+                        , std::string &&nameStr
+                        , std::string &&labelStr
+                        , std::string &&placeholderStr
+                        , std::string &&typeStr
+                        , bool required) {
+    fmt::print(stream,
+      R"(<label for="{}">{}</label><br>)"
+      R"(<input type="{}" placeholder="{}" name="{}"{}>)",
+      nameStr, std::move(labelStr),
+      std::move(typeStr), std::move(placeholderStr), nameStr, required ? " required" : ""
     );
-    return field;
+  }
+
+  void csrfField(std::stringstream &stream, std::string const &csrfToken) {
+    fmt::print(stream, R"(<input type="hidden" name="csrfToken" value="{}">)", csrfToken);
   }
 }
