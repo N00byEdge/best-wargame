@@ -63,7 +63,7 @@ void Service::start() {
     makeServer(webServers.httpsServer, UseSSL, 443);
   });
 
-	inet.negotiate_dhcp(3.0,
+  inet.negotiate_dhcp(3.0,
   [](bool timeout){
     if(timeout) {
       printf("DHCP negotiation failed, falling back to static assignment.\n");
