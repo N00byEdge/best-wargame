@@ -34,8 +34,6 @@ namespace Auth {
     }
   };
 
-  //using UserPtr = std::weak_ptr<Wargame::User>;
-
   struct ActiveSession {
     SessionKey sessionKey;
     UserPtr user;
