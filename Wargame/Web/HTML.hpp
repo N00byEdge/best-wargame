@@ -11,7 +11,7 @@ namespace HTML {
   namespace Impl {
     template<char const *tag>
     struct SimpleTag {
-      void operator()(std::stringstream &stream,  std::string const &content) const {
+      void operator()(std::stringstream &stream,  std::string_view content) const {
         fmt::print(stream,
           "<{0}>{1}</{0}>",
           tag, content
@@ -38,7 +38,7 @@ namespace HTML {
 
     template<char const *tag>
     struct ArgTag {
-      void operator()(std::stringstream &stream, std::string const &arg, std::string const &content) const {
+      void operator()(std::stringstream &stream, std::string const &arg, std::string_view content) const {
         fmt::print(stream,
           "<{0}{1}>{2}</{0}>",
           tag, arg.empty() ? "" : ' ' + arg, content
