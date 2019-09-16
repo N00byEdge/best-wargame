@@ -11,8 +11,16 @@ namespace HTML {
   namespace Impl {
     template<char const *tag>
     struct SimpleTag {
+      void operator()(std::stringstream &stream,  std::string const &content) const {
+        fmt::print(stream,
+          "<{0}>{1}</{0}>",
+          tag, content
+        );
+      }
+
       template<typename F>
-      void operator()(std::stringstream &stream, F &&f) const {
+      std::enable_if_t<!std::is_convertible_v<F, std::string>, void>
+      operator()(std::stringstream &stream, F &&f) const {
         fmt::print(stream, "<{}>", tag);
         f();
         fmt::print(stream, "</{}>", tag);
@@ -30,8 +38,16 @@ namespace HTML {
 
     template<char const *tag>
     struct ArgTag {
+      void operator()(std::stringstream &stream, std::string const &arg, std::string const &content) const {
+        fmt::print(stream,
+          "<{0}{1}>{2}</{0}>",
+          tag, arg.empty() ? "" : ' ' + arg, content
+        );
+      }
+
       template<typename F>
-      void operator()(std::stringstream &stream, std::string const &arg, F &&f) const {
+      std::enable_if_t<!std::is_convertible_v<F, std::string>, void>
+      operator()(std::stringstream &stream, std::string const &arg, F &&f) const {
         fmt::print(stream, "<{}{}>", tag, arg.empty() ? "" : ' ' + arg);
         f();
         fmt::print(stream, "</{}>", tag);
@@ -79,8 +95,8 @@ namespace HTML {
   std::string doctype = "<!DOCTYPE html>";
 
   void errorPage(std::stringstream &stream, std::string const &errorString) {
-    title(stream, [&](){ stream << "Error"; });
-    h1(stream, [&](){ stream << std::move(errorString); });
+    title(stream, "Error");
+    h1(stream, errorString);
   }
 
   void labelledInputField(std::stringstream &stream

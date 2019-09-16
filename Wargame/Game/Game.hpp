@@ -10,10 +10,10 @@
 namespace Wargame {
   void registrationPage(std::stringstream &stream, std::string const &csrfToken) {
     HTML::formAction(stream, "/signup", [&](){
-      HTML::title(stream, [&](){ stream << "Best wargame - Sign up"; });
+      HTML::title(stream, "Best wargame - Sign up");
       HTML::div(stream, "", [&]() {
-        HTML::h1(stream, [&](){ stream << "Registration"; });
-        HTML::p (stream, [&](){ stream << "Fill in the following fields to complete your registration"; });
+        HTML::h1(stream, "Registration");
+        HTML::p (stream, "Fill in the following fields to complete your registration");
         stream << HTML::hr;
         HTML::labelledInputField(stream, "username", "Username", "Enter username", "text", true);
         stream << HTML::br;
@@ -23,7 +23,7 @@ namespace Wargame {
         stream << HTML::br;
         HTML::csrfField(stream, csrfToken);
         stream << HTML::hr,
-        HTML::button(stream, "type=\"submit\"", [&](){ stream << "Sign up"; });
+        HTML::button(stream, "type=\"submit\"", "Sign up");
       });
     });
   }
@@ -31,11 +31,11 @@ namespace Wargame {
   inline static const std::string homepage =
     []() {
       std::stringstream stream;
-      HTML::title(stream, [&](){ stream << "Best wargame"; });
-      HTML::h1(stream, [&](){ stream << "Homepage"; });
-      HTML::href(stream, "/signup", [&](){ stream << "Sign up"; });
+      HTML::title(stream, "Best wargame");
+      HTML::h1(stream, "Homepage");
+      HTML::href(stream, "/signup", "Sign up");
       stream << HTML::br;
-      HTML::href(stream, "/login", [&](){ stream << "Login"; });
+      HTML::href(stream, "/login", "Login");
       return stream.str();
     }();
 
