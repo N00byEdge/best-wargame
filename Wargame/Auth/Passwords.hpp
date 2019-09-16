@@ -8,7 +8,7 @@
 #include "Wargame/Util.hpp"
 
 namespace Auth {
-  using PasswordSalt = std::array<unsigned char, 0x20>;
+  using PasswordSalt = std::array<unsigned char, SHA512_DIGEST_LENGTH>;
   using PasswordHash = std::array<unsigned char, SHA512_DIGEST_LENGTH>;
 
   PasswordHash hashPassword(std::string_view const &password, PasswordSalt const &salt, int iterations) {
