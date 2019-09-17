@@ -81,23 +81,19 @@ namespace Wargame {
     request->set_attribute(std::make_shared<SessionAttribute>(session));
     stream->ss << HTML::doctype << R"(<meta charset="utf-8"/>)";
 
-    // @TODO: Move the CSRF token checking to a table of valid (token, session) pairs
-    // to not invalidate your token if you open a form in another tab
     if(request->method() == http::POST) {
       Auth::SessionKey csrf;
       auto csrfString = request->source().post_value("csrfToken");
       if(csrfString.size() != csrf.size())
         return;
       std::copy(csrfString.begin(), csrfString.end(), csrf.begin());
-      if(!session->currentCSRF || (*session->currentCSRF != csrf)) {
+      auto uri = request->uri().path();
+      if(!Auth::consumeCSRFToken(*session, csrf, uri)) {
         // Someone attempted CSRF; deny the POST.
         HTML::errorPage(stream->ss, "Invalid CSRF token, try sending your request again.");
         sendResponse();
         return;
       }
-
-      // Invalidate current CSRF token
-      session->currentCSRF.reset();
     }
 
     f();

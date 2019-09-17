@@ -7,6 +7,8 @@
 #define FMT_HEADER_ONLY
 #include <fmt/ostream.h>
 
+#include "Wargame/Auth/Session.hpp"
+
 namespace HTML {
   namespace Impl {
     template<char const *tag>
@@ -79,10 +81,24 @@ namespace HTML {
 
   inline static const Impl::ArgTag<Impl::form> form;
 
+  void csrfField(std::stringstream &stream, std::string_view const &csrfToken) {
+    fmt::print(stream, R"(<input type="hidden" name="csrfToken" value="{}">)", csrfToken);
+  }
+
   template<typename F>
-  void formAction(std::stringstream &stream, std::string const &target, F &&f) {
-    // @TODO: Move the CSRF token things to over here
-    form(stream, "action=\"" + target + "\" method=\"post\"", std::forward<F>(f));
+  void makeForm(
+      std::stringstream &stream
+    , std::string const &target
+    , Auth::ActiveSession const &session
+    , F &&f) {
+
+    auto fWithCSRF = [&]() {
+      auto csrf = Auth::makeCSRFForSession(session, target);
+      csrfField(stream, {csrf.data(), csrf.size()});
+      std::forward<F>(f)();
+    };
+    
+    form(stream, "action=\"" + target + "\" method=\"post\"", fWithCSRF);
   };
 
   inline static const Impl::ArgTag<Impl::div> div;
@@ -111,9 +127,5 @@ namespace HTML {
       nameStr, std::move(labelStr),
       std::move(typeStr), std::move(placeholderStr), nameStr, required ? " required" : ""
     );
-  }
-
-  void csrfField(std::stringstream &stream, std::string const &csrfToken) {
-    fmt::print(stream, R"(<input type="hidden" name="csrfToken" value="{}">)", csrfToken);
   }
 }
